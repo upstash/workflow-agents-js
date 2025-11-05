@@ -1,0 +1,34 @@
+{
+  "name": "workflow-agents",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "lint": "tsc && eslint \"{src,platforms}/**/*.{js,ts,tsx}\"  --quiet --fix",
+    "build": "tsup && cp README.md ./dist/ && cp package.json ./dist/ && cp LICENSE ./dist/"
+  },
+  "author": "Cahid Arda Oz",
+  "license": "ISC",
+  "description": "",
+  "peerDependencies": {
+    "ai": "^5.0.0",
+    "@upstash/workflow": "^0.2.21"
+  },
+  "devDependencies": {
+    "@ai-sdk/anthropic": "^2.0.41",
+    "@ai-sdk/openai": "^2.0.62",
+    "@eslint/js": "^9.39.1",
+    "@types/bun": "^1.3.1",
+    "@types/node": "^24.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.46.3",
+    "@typescript-eslint/parser": "^8.46.3",
+    "eslint": "^9.39.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^16.5.0",
+    "jiti": "^2.6.1",
+    "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.3"
+  }
+}
