@@ -1,8 +1,7 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { Agent, ManagerAgent } from "./agent";
-import { MOCK_QSTASH_SERVER_URL, mockQStashServer, WORKFLOW_ENDPOINT } from "../utils";
+import { MOCK_QSTASH_SERVER_URL, mockQStashServer, WORKFLOW_ENDPOINT, getWorkflowRunId, nanoid } from "../utils/test-utils";
 import { Client } from "@upstash/qstash";
-import { getWorkflowRunId, nanoid } from "../utils";
 import { WorkflowAgents } from ".";
 import { tool } from "ai";
 import { z } from "zod";

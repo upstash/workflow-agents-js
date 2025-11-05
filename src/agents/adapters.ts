@@ -9,7 +9,7 @@ import { AgentCallParams, AISDKTool, LangchainTool, ProviderFunction } from "./t
 import { AGENT_NAME_HEADER } from "./constants";
 import { z, ZodType } from "zod";
 import { WorkflowAbort, WorkflowContext } from "@upstash/workflow";
-import { isInstanceOf } from "../utils";
+import { isInstanceOf } from "../utils/error";
 
 export const fetchWithContextCall = async (
   context: WorkflowContext,

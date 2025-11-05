@@ -3,8 +3,8 @@ import { z } from "zod";
 import { generateText, stepCountIs, tool } from "ai";
 import { AgentParameters, AISDKTool, ManagerAgentParameters } from "./types";
 import { AGENT_NAME_HEADER, MANAGER_AGENT_PROMPT } from "./constants";
-import { isDisabledWorkflowContext } from "../utils";
 import { WorkflowContext } from "@upstash/workflow";
+import { isDisabledWorkflowContext } from "../utils/error";
 
 /**
  * An Agent which utilizes the model and tools available to it
@@ -132,3 +132,4 @@ export class ManagerAgent extends Agent {
     this.agents = agents;
   }
 }
+

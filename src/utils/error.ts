@@ -1,3 +1,5 @@
+import type { WorkflowContext } from "@upstash/workflow";
+
 function getConstructorName(obj: unknown): string | null {
   if (obj === null || obj === undefined) {
     return null;
@@ -25,3 +27,7 @@ export function isInstanceOf<T>(
 ): v is T {
   return getConstructorNames(v).includes(ctor.name);
 }
+
+export const isDisabledWorkflowContext = (context: WorkflowContext & ({ disabled: true } | {disabled?: never})) => {
+  return "disabled" in context && context.disabled;
+};

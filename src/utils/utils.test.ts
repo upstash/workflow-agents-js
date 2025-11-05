@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { getWorkflowRunId } from "./utils";
+import { getWorkflowRunId } from "./test-utils";
 
 describe("getWorkflowRunId", () => {
   test("should return random with no id", () => {
