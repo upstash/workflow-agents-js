@@ -4,3 +4,5 @@ import { WorkflowAgents } from "./agents";
 export const agentWorkflow = (context: WorkflowContext) => {
   return new WorkflowAgents({ context });
 }
+
+export { WorkflowTool } from "./agents/adapters";

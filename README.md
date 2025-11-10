@@ -8,23 +8,40 @@ A powerful library for building AI agent workflows with Upstash Workflow. This p
 npm install @upstash/workflow-agents
 ```
 
+Currently, the package only supports a release candidate `@upstash/workflow` version, so make sure to install that version:
+
+```bash
+npm install @upstash/workflow@~0.3.0-rc
+```
+
 For defining tools, you may also need:
 
 ```bash
-npm install ai mathjs zod @agentic/ai-sdk @agentic/weather @langchain/core @langchain/community
-```
-
-## Prerequisites
-
-- Setup your Upstash Workflow endpoint
-- Add required environment variables:
-
-```env
-QSTASH_TOKEN="<QSTASH_TOKEN>"
-OPENAI_API_KEY="<OPENAI_API_KEY>"
+npm install ai mathjs zod
 ```
 
 ## Quick Start
+
+Start with setting up your environment variables. If you are going to use OpenAI models, set the `OPENAI_API_KEY` variable:
+
+```
+OPENAI_API_KEY="<OPENAI_API_KEY>"
+```
+
+Next, set the QStash env variables. For local development, you can start the [QStash local development server](https://upstash.com/docs/workflow/howto/local-development/development-server):
+
+```bash
+npx @upstash/qstash-cli@latest dev
+```
+
+Then, set your environment variables:
+
+```ts
+QSTASH_TOKEN="eyJVc2VySUQiOiJkZWZhdWx0VXNlciIsIlBhc3N3b3JkIjoiZGVmYXVsdFBhc3N3b3JkIn0="
+QSTASH_URL="http://localhost:8080"
+```
+
+Next, define your agent workflow in a Next.js API route:
 
 ```ts
 import { serve } from "@upstash/workflow/nextjs";
@@ -115,7 +132,7 @@ The Agents API is compatible with both **AI SDK** and **LangChain** tools. You c
 ### WorkflowTool (Custom)
 
 ```ts
-import { WorkflowTool } from '@upstash/workflow';
+import { WorkflowTool } from "@upstash/workflow-agents";
 import { z } from 'zod';
 import * as mathjs from 'mathjs';
 
