@@ -1,10 +1,31 @@
 import { z } from "zod";
 
-import { generateText, stepCountIs, tool } from "ai";
+import { generateText, stepCountIs, StepResult, StopCondition, tool, ToolSet } from "ai";
 import { AgentParameters, AISDKTool, ManagerAgentParameters } from "./types";
 import { AGENT_NAME_HEADER, MANAGER_AGENT_PROMPT } from "./constants";
-import { WorkflowContext } from "@upstash/workflow";
+import { WorkflowAbort, WorkflowContext } from "@upstash/workflow";
 import { isDisabledWorkflowContext } from "../utils/error";
+
+const getWorkflowAbortInfo = (steps: StepResult<ToolSet>[]) => {
+  for (const step of steps) {
+    if (step.finishReason === "tool-calls") {
+      for (const item of step.content) {
+        if (
+          item.type === "tool-error" &&
+          (item.error as Error).name === "WorkflowAbort"
+        ) {
+          return item.error as WorkflowAbort;
+        }
+      }
+    }
+  }
+  return null;
+}
+
+const hasErrors: StopCondition<ToolSet> = ({ steps }) => {
+  const result = getWorkflowAbortInfo(steps);
+  return Boolean(result);
+};
 
 /**
  * An Agent which utilizes the model and tools available to it
@@ -29,7 +50,14 @@ export class Agent {
   private readonly context: WorkflowContext;
 
   constructor(
-    { tools, maxSteps, background, name, model, temparature = 0.1 }: AgentParameters,
+    {
+      tools,
+      maxSteps,
+      background,
+      name,
+      model,
+      temparature = 0.1,
+    }: AgentParameters,
     context: WorkflowContext
   ) {
     this.name = name;
@@ -59,7 +87,7 @@ export class Agent {
       const result = await generateText({
         model: this.model,
         tools: this.tools,
-        stopWhen: stepCountIs(this.maxSteps),
+        stopWhen: [stepCountIs(this.maxSteps), hasErrors],
         system: this.background,
         prompt: prompt,
         headers: {
@@ -67,6 +95,12 @@ export class Agent {
         },
         temperature: this.temparature,
       });
+
+      const abortError = getWorkflowAbortInfo(result.steps);
+      if (abortError) {
+        throw new WorkflowAbort(abortError.message, abortError.stepInfo, abortError.cancelWorkflow);
+      }
+
       return { text: result.text };
     } catch (error) {
       throw error;
@@ -123,7 +157,9 @@ export class ManagerAgent extends Agent {
       {
         background,
         maxSteps,
-        tools: Object.fromEntries(agents.map((agent) => [agent.name, agent.asTool()])),
+        tools: Object.fromEntries(
+          agents.map((agent) => [agent.name, agent.asTool()])
+        ),
         name,
         model,
       },
@@ -132,4 +168,3 @@ export class ManagerAgent extends Agent {
     this.agents = agents;
   }
 }
-
