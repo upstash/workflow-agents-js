@@ -1,6 +1,12 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { Client } from "@upstash/qstash";
-import { MOCK_QSTASH_SERVER_URL, mockQStashServer, WORKFLOW_ENDPOINT, getWorkflowRunId, nanoid } from "../utils/test-utils";
+import {
+  MOCK_QSTASH_SERVER_URL,
+  mockQStashServer,
+  WORKFLOW_ENDPOINT,
+  getWorkflowRunId,
+  nanoid,
+} from "../utils/test-utils";
 import { WorkflowAgents } from ".";
 import { tool } from "ai";
 import { z } from "zod";
@@ -17,17 +23,17 @@ const ProxyDisabledWorkflowContext = new Proxy(MockDisabledWorkflowContext, {
     // @ts-expect-error TS is confused by the Proxy here
     const instance = new target(...args);
     return new Proxy(instance, {
-      get(target, prop) {        
-        if (prop === 'disabled') {
+      get(target, prop) {
+        if (prop === "disabled") {
           return true;
         }
-        if (typeof target[prop as keyof typeof target] === 'function') {
-          throw new WorkflowAbort('WorkflowAbort');
+        if (typeof target[prop as keyof typeof target] === "function") {
+          throw new WorkflowAbort("WorkflowAbort");
         }
         return target[prop as keyof typeof target];
-      }
+      },
     });
-  }
+  },
 });
 
 export const getAgentsApi = ({
@@ -48,8 +54,14 @@ export const getAgentsApi = ({
     context = new ProxyDisabledWorkflowContext({
       headers: new Headers({}) as Headers,
       initialPayload: "mock",
-      qstashClient: new Client({ baseUrl: MOCK_QSTASH_SERVER_URL, token, enableTelemetry: false }),
-      steps: [{ stepId: 0, stepName: "init", concurrent: 1, stepType: "Initial" }],
+      qstashClient: new Client({
+        baseUrl: MOCK_QSTASH_SERVER_URL,
+        token,
+        enableTelemetry: false,
+      }),
+      steps: [
+        { stepId: 0, stepName: "init", concurrent: 1, stepType: "Initial" },
+      ],
       url: WORKFLOW_ENDPOINT,
       workflowRunId,
     });
@@ -57,8 +69,14 @@ export const getAgentsApi = ({
     context = new WorkflowContext({
       headers: new Headers({}) as Headers,
       initialPayload: "mock",
-      qstashClient: new Client({ baseUrl: MOCK_QSTASH_SERVER_URL, token, enableTelemetry: false }),
-      steps: [{ stepId: 0, stepName: "init", concurrent: 1, stepType: "Initial" }],
+      qstashClient: new Client({
+        baseUrl: MOCK_QSTASH_SERVER_URL,
+        token,
+        enableTelemetry: false,
+      }),
+      steps: [
+        { stepId: 0, stepName: "init", concurrent: 1, stepType: "Initial" },
+      ],
       url: WORKFLOW_ENDPOINT,
       workflowRunId,
       telemetry: {
@@ -74,7 +92,9 @@ export const getAgentsApi = ({
   const maxSteps = 2;
   const name = "my agent";
   const temparature = 0.4;
-  const model = getModel ? getModel(agentsApi, context) : agentsApi.openai("gpt-4");
+  const model = getModel
+    ? getModel(agentsApi, context)
+    : agentsApi.openai("gpt-4");
 
   const agent = agentsApi.agent({
     tools: {
@@ -108,7 +128,9 @@ describe("tasks", () => {
   });
 
   test("single agent", async () => {
-    const { agentsApi, agent, token, workflowRunId } = getAgentsApi({ disabledContext: false });
+    const { agentsApi, agent, token, workflowRunId } = getAgentsApi({
+      disabledContext: false,
+    });
     const task = agentsApi.task({
       agent,
       prompt: "hello world!",
@@ -117,7 +139,9 @@ describe("tasks", () => {
     await mockQStashServer({
       execute: () => {
         const throws = () => task.run();
-        expect(throws).toThrowError(`Aborting workflow after executing step 'Call Agent my agent'`);
+        expect(throws).toThrowError(
+          `Aborting workflow after executing step 'Call Agent my agent'`
+        );
       },
       responseFields: {
         status: 200,
@@ -129,18 +153,21 @@ describe("tasks", () => {
         token,
         body: [
           {
-     body: "{\"model\":\"gpt-4\",\"input\":[{\"role\":\"system\",\"content\":\"an agent\"},{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"hello world!\"}]}],\"temperature\":0.4,\"tools\":[{\"type\":\"function\",\"name\":\"tool\",\"description\":\"ai sdk tool\",\"parameters\":{\"type\":\"object\",\"properties\":{\"expression\":{\"type\":\"string\"}},\"required\":[\"expression\"],\"additionalProperties\":false,\"$schema\":\"http://json-schema.org/draft-07/schema#\"},\"strict\":false}],\"tool_choice\":\"auto\"}",
-     destination: "https://api.openai.com/v1/responses",
+            body: '{"model":"gpt-4","input":[{"role":"system","content":"an agent"},{"role":"user","content":[{"type":"input_text","text":"hello world!"}]}],"temperature":0.4,"tools":[{"type":"function","name":"tool","description":"ai sdk tool","parameters":{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","properties":{"expression":{"type":"string"}},"required":["expression"],"additionalProperties":false},"strict":false}],"tool_choice":"auto"}',
+            destination: "https://api.openai.com/v1/responses",
             headers: {
               "upstash-workflow-sdk-version": "1",
               "content-type": "application/json",
               "upstash-callback": WORKFLOW_ENDPOINT,
-              "upstash-callback-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+              "upstash-callback-feature-set":
+                "LazyFetch,InitialBody,WF_DetectTrigger",
               "upstash-callback-forward-upstash-workflow-callback": "true",
               "upstash-callback-forward-upstash-workflow-concurrent": "1",
-              "upstash-callback-forward-upstash-workflow-contenttype": "application/json",
+              "upstash-callback-forward-upstash-workflow-contenttype":
+                "application/json",
               "upstash-callback-forward-upstash-workflow-stepid": "1",
-              "upstash-callback-forward-upstash-workflow-stepname": "Call Agent my agent",
+              "upstash-callback-forward-upstash-workflow-stepname":
+                "Call Agent my agent",
               "upstash-callback-forward-upstash-workflow-steptype": "Call",
               "upstash-callback-workflow-calltype": "fromCallback",
               "upstash-callback-workflow-init": "false",
@@ -157,7 +184,6 @@ describe("tasks", () => {
               "upstash-workflow-runid": workflowRunId,
               "upstash-workflow-url": WORKFLOW_ENDPOINT,
 
-              "upstash-telemetry-agent": "true",
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
               "upstash-telemetry-sdk": "workflow",
@@ -211,18 +237,21 @@ describe("tasks", () => {
         token,
         body: [
           {
-     body: "{\"model\":\"gpt-4o\",\"input\":[{\"role\":\"system\",\"content\":\"You are an agent orchestrating other AI Agents.\\n\\nThese other agents have tools available to them.\\n\\nGiven a prompt, utilize these agents to address requests.\\n\\nDon't always call all the agents provided to you at the same time. You can call one and use it's response to call another.\\n\\nAvoid calling the same agent twice in one turn. Instead, prefer to call it once but provide everything\\nyou need from that agent.\\n\"},{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"hello world!\"}]}],\"temperature\":0.1,\"tools\":[{\"type\":\"function\",\"name\":\"my agent\",\"description\":\"An AI Agent with the following background: an agentHas access to the following tools: ai sdk tool\",\"parameters\":{\"type\":\"object\",\"properties\":{\"prompt\":{\"type\":\"string\"}},\"required\":[\"prompt\"],\"additionalProperties\":false,\"$schema\":\"http://json-schema.org/draft-07/schema#\"},\"strict\":false}],\"tool_choice\":\"auto\"}",
-     destination: "https://api.deepseek.com/v1/responses",
+            body: '{"model":"gpt-4o","input":[{"role":"system","content":"You are an agent orchestrating other AI Agents.\\n\\nThese other agents have tools available to them.\\n\\nGiven a prompt, utilize these agents to address requests.\\n\\nDon\'t always call all the agents provided to you at the same time. You can call one and use it\'s response to call another.\\n\\nAvoid calling the same agent twice in one turn. Instead, prefer to call it once but provide everything\\nyou need from that agent.\\n"},{"role":"user","content":[{"type":"input_text","text":"hello world!"}]}],"temperature":0.1,"tools":[{"type":"function","name":"my agent","description":"An AI Agent with the following background: an agentHas access to the following tools: ai sdk tool","parameters":{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","properties":{"prompt":{"type":"string"}},"required":["prompt"],"additionalProperties":false},"strict":false}],"tool_choice":"auto"}',
+            destination: "https://api.deepseek.com/v1/responses",
             headers: {
               "upstash-workflow-sdk-version": "1",
               "content-type": "application/json",
               "upstash-callback": WORKFLOW_ENDPOINT,
-              "upstash-callback-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+              "upstash-callback-feature-set":
+                "LazyFetch,InitialBody,WF_DetectTrigger",
               "upstash-callback-forward-upstash-workflow-callback": "true",
               "upstash-callback-forward-upstash-workflow-concurrent": "1",
-              "upstash-callback-forward-upstash-workflow-contenttype": "application/json",
+              "upstash-callback-forward-upstash-workflow-contenttype":
+                "application/json",
               "upstash-callback-forward-upstash-workflow-stepid": "1",
-              "upstash-callback-forward-upstash-workflow-stepname": "Call Agent Manager LLM",
+              "upstash-callback-forward-upstash-workflow-stepname":
+                "Call Agent Manager LLM",
               "upstash-callback-forward-upstash-workflow-steptype": "Call",
               "upstash-callback-workflow-calltype": "fromCallback",
               "upstash-callback-workflow-init": "false",
@@ -239,7 +268,6 @@ describe("tasks", () => {
               "upstash-workflow-runid": workflowRunId,
               "upstash-workflow-url": WORKFLOW_ENDPOINT,
 
-              "upstash-telemetry-agent": "true",
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
               "upstash-telemetry-sdk": "workflow",
@@ -275,7 +303,9 @@ describe("tasks", () => {
     await mockQStashServer({
       execute: () => {
         const throws = () => task.run();
-        expect(throws).toThrowError(`Aborting workflow after executing step 'Call Agent my agent'`);
+        expect(throws).toThrowError(
+          `Aborting workflow after executing step 'Call Agent my agent'`
+        );
       },
       responseFields: {
         status: 200,
@@ -287,16 +317,18 @@ describe("tasks", () => {
         token,
         body: [
           {
-            body: '{"model":"claude-3-sonnet-20240229","max_tokens":4096,"temperature":0.4,"system":[{"type":"text","text":"an agent"}],"messages":[{"role":"user","content":[{"type":"text","text":"hello world!"}]}],"tools":[{"name":"tool","description":"ai sdk tool","input_schema":{"type":"object","properties":{"expression":{"type":"string"}},"required":["expression"],"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}}],"tool_choice":{"type":"auto"}}',
+            body: '{"model":"claude-3-sonnet-20240229","max_tokens":4096,"temperature":0.4,"system":[{"type":"text","text":"an agent"}],"messages":[{"role":"user","content":[{"type":"text","text":"hello world!"}]}],"tools":[{"name":"tool","description":"ai sdk tool","input_schema":{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","properties":{"expression":{"type":"string"}},"required":["expression"],"additionalProperties":false}}],"tool_choice":{"type":"auto"}}',
             destination: "https://api.anthropic.com/v1/messages",
             headers: {
               "upstash-workflow-sdk-version": "1",
               "content-type": "application/json",
               "upstash-callback": WORKFLOW_ENDPOINT,
-              "upstash-callback-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+              "upstash-callback-feature-set":
+                "LazyFetch,InitialBody,WF_DetectTrigger",
               "upstash-callback-forward-upstash-workflow-callback": "true",
               "upstash-callback-forward-upstash-workflow-concurrent": "1",
-              "upstash-callback-forward-upstash-workflow-contenttype": "application/json",
+              "upstash-callback-forward-upstash-workflow-contenttype":
+                "application/json",
               "upstash-callback-forward-upstash-workflow-stepid": "1",
               "upstash-callback-forward-upstash-workflow-steptype": "Call",
               "upstash-callback-workflow-calltype": "fromCallback",
@@ -312,13 +344,13 @@ describe("tasks", () => {
               "upstash-workflow-init": "false",
               "upstash-workflow-runid": workflowRunId,
               "upstash-workflow-url": WORKFLOW_ENDPOINT,
-              "upstash-callback-forward-upstash-workflow-stepname": "Call Agent my agent",
+              "upstash-callback-forward-upstash-workflow-stepname":
+                "Call Agent my agent",
               "upstash-forward-user-agent": expect.any(String),
 
               // anthropic specific headers:
               "upstash-forward-x-api-key": "antrhopic-key",
               "upstash-forward-anthropic-version": "2023-06-01",
-              "upstash-telemetry-agent": "true",
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
               "upstash-telemetry-sdk": "workflow",

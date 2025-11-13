@@ -104,15 +104,7 @@ export const wrapTools = ({
       const [toolName, tool] = toolInfo;
 
       const executeAsStep = "executeAsStep" in tool ? tool.executeAsStep : true;
-      const aiSDKTool: AISDKTool = convertToAISDKTool(tool);
-
-      const execute = aiSDKTool.execute;
-      if (execute && executeAsStep) {
-        const wrappedExecute = (...params: Parameters<typeof execute>) => {
-          return context.run(`Run tool ${toolName}`, () => execute(...params));
-        };
-        aiSDKTool.execute = wrappedExecute;
-      }
+      const aiSDKTool: AISDKTool = convertToAISDKTool(tool, context, toolName, executeAsStep);
 
       return [toolName, aiSDKTool];
     })
@@ -123,24 +115,74 @@ export const wrapTools = ({
  * Converts tools to AI SDK tool if it already isn't
  *
  * @param tool LangChain or AI SDK Tool
+ * @param context workflow context
+ * @param toolName name of the tool
+ * @param executeAsStep whether to wrap the execute method with context.run
  * @returns AI SDK Tool
  */
-const convertToAISDKTool = (tool: AISDKTool | LangchainTool): AISDKTool => {
+const convertToAISDKTool = (
+  tool: AISDKTool | LangchainTool,
+  context: WorkflowContext,
+  toolName: string,
+  executeAsStep: boolean
+): AISDKTool => {
   const isLangchainTool = "invoke" in tool;
-  return isLangchainTool ? convertLangchainTool(tool as LangchainTool) : (tool as AISDKTool);
+  return isLangchainTool
+    ? convertLangchainTool(tool as LangchainTool, context, toolName, executeAsStep)
+    : convertAISDKTool(tool as AISDKTool, context, toolName, executeAsStep);
 };
 
 /**
  * converts a langchain tool to AI SDK tool
  *
  * @param langchainTool
+ * @param context workflow context
+ * @param toolName name of the tool
+ * @param executeAsStep whether to wrap the execute method with context.run
  * @returns AI SDK Tool
  */
-const convertLangchainTool = (langchainTool: LangchainTool): AISDKTool => {
+const convertLangchainTool = (
+  langchainTool: LangchainTool,
+  context: WorkflowContext,
+  toolName: string,
+  executeAsStep: boolean
+): AISDKTool => {
   return tool({
     description: langchainTool.description,
     inputSchema: langchainTool.schema,
-    execute: async (...param: unknown[]) => langchainTool.invoke(...param),
+    execute: executeAsStep
+      ? async (...param: unknown[]) => {
+          return context.run(`Run tool ${toolName}`, () => langchainTool.invoke(...param));
+        }
+      : async (...param: unknown[]) => langchainTool.invoke(...param),
+  });
+};
+
+/**
+ * converts an AI SDK tool to a new AI SDK tool with wrapped execution
+ *
+ * @param aiSDKTool
+ * @param context workflow context
+ * @param toolName name of the tool
+ * @param executeAsStep whether to wrap the execute method with context.run
+ * @returns AI SDK Tool
+ */
+const convertAISDKTool = (
+  aiSDKTool: AISDKTool,
+  context: WorkflowContext,
+  toolName: string,
+  executeAsStep: boolean
+): AISDKTool => {
+  const originalExecute = aiSDKTool.execute;
+  
+  return tool({
+    description: aiSDKTool.description,
+    inputSchema: aiSDKTool.inputSchema,
+    execute: originalExecute && executeAsStep
+      ? async (...params: Parameters<typeof originalExecute>) => {
+          return context.run(`Run tool ${toolName}`, () => originalExecute(...params));
+        }
+      : originalExecute,
   });
 };
 

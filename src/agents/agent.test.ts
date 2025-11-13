@@ -1,6 +1,12 @@
 import { describe, test, expect, beforeEach } from "bun:test";
 import { Agent, ManagerAgent } from "./agent";
-import { MOCK_QSTASH_SERVER_URL, mockQStashServer, WORKFLOW_ENDPOINT, getWorkflowRunId, nanoid } from "../utils/test-utils";
+import {
+  MOCK_QSTASH_SERVER_URL,
+  mockQStashServer,
+  WORKFLOW_ENDPOINT,
+  getWorkflowRunId,
+  nanoid,
+} from "../utils/test-utils";
 import { Client } from "@upstash/qstash";
 import { WorkflowAgents } from ".";
 import { tool } from "ai";
@@ -19,7 +25,11 @@ describe("agents", () => {
   const context = new WorkflowContext({
     headers: new Headers({}) as Headers,
     initialPayload: "mock",
-    qstashClient: new Client({ baseUrl: MOCK_QSTASH_SERVER_URL, token, enableTelemetry: false }),
+    qstashClient: new Client({
+      baseUrl: MOCK_QSTASH_SERVER_URL,
+      token,
+      enableTelemetry: false,
+    }),
     steps: [],
     url: WORKFLOW_ENDPOINT,
     workflowRunId,
@@ -91,18 +101,21 @@ describe("agents", () => {
           token,
           body: [
             {
-     body: "{\"model\":\"gpt-4\",\"input\":[{\"role\":\"system\",\"content\":\"an agent\"},{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"my prompt\"}]}],\"temperature\":0.4,\"tools\":[{\"type\":\"function\",\"name\":\"tool\",\"description\":\"ai sdk tool\",\"parameters\":{\"type\":\"object\",\"properties\":{\"expression\":{\"type\":\"string\"}},\"required\":[\"expression\"],\"additionalProperties\":false,\"$schema\":\"http://json-schema.org/draft-07/schema#\"},\"strict\":false}],\"tool_choice\":\"auto\"}",
-     destination: "https://api.openai.com/v1/responses",
+              body: '{"model":"gpt-4","input":[{"role":"system","content":"an agent"},{"role":"user","content":[{"type":"input_text","text":"my prompt"}]}],"temperature":0.4,"tools":[{"type":"function","name":"tool","description":"ai sdk tool","parameters":{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","properties":{"expression":{"type":"string"}},"required":["expression"],"additionalProperties":false},"strict":false}],"tool_choice":"auto"}',
+              destination: "https://api.openai.com/v1/responses",
               headers: {
                 "upstash-workflow-sdk-version": "1",
                 "content-type": "application/json",
                 "upstash-callback": WORKFLOW_ENDPOINT,
-                "upstash-callback-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+                "upstash-callback-feature-set":
+                  "LazyFetch,InitialBody,WF_DetectTrigger",
                 "upstash-callback-forward-upstash-workflow-callback": "true",
                 "upstash-callback-forward-upstash-workflow-concurrent": "1",
-                "upstash-callback-forward-upstash-workflow-contenttype": "application/json",
+                "upstash-callback-forward-upstash-workflow-contenttype":
+                  "application/json",
                 "upstash-callback-forward-upstash-workflow-stepid": "1",
-                "upstash-callback-forward-upstash-workflow-stepname": "Call Agent my agent",
+                "upstash-callback-forward-upstash-workflow-stepname":
+                  "Call Agent my agent",
                 "upstash-callback-forward-upstash-workflow-steptype": "Call",
                 "upstash-callback-workflow-calltype": "fromCallback",
                 "upstash-callback-workflow-init": "false",
@@ -124,7 +137,7 @@ describe("agents", () => {
                 "upstash-retries": "5",
                 "upstash-retry-delay": "1000",
                 "upstash-timeout": "10",
-              "upstash-forward-user-agent": expect.any(String),
+                "upstash-forward-user-agent": expect.any(String),
               },
             },
           ],
@@ -145,7 +158,8 @@ describe("agents", () => {
           if (!execute) {
             throw new Error("execute is missing.");
           } else {
-            const throws = () => execute({ prompt: "hello" }, { messages: [], toolCallId: "id" });
+            const throws = () =>
+              execute({ prompt: "hello" }, { messages: [], toolCallId: "id" });
             expect(throws).toThrowError(
               `Aborting workflow after executing step 'Call Agent my agent'`
             );
@@ -161,18 +175,21 @@ describe("agents", () => {
           token,
           body: [
             {
-              body: "{\"model\":\"gpt-4\",\"input\":[{\"role\":\"system\",\"content\":\"an agent\"},{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"hello\"}]}],\"temperature\":0.4,\"tools\":[{\"type\":\"function\",\"name\":\"tool\",\"description\":\"ai sdk tool\",\"parameters\":{\"type\":\"object\",\"properties\":{\"expression\":{\"type\":\"string\"}},\"required\":[\"expression\"],\"additionalProperties\":false,\"$schema\":\"http://json-schema.org/draft-07/schema#\"},\"strict\":false}],\"tool_choice\":\"auto\"}",
-     destination: "https://api.openai.com/v1/responses",
+              body: '{"model":"gpt-4","input":[{"role":"system","content":"an agent"},{"role":"user","content":[{"type":"input_text","text":"hello"}]}],"temperature":0.4,"tools":[{"type":"function","name":"tool","description":"ai sdk tool","parameters":{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","properties":{"expression":{"type":"string"}},"required":["expression"],"additionalProperties":false},"strict":false}],"tool_choice":"auto"}',
+              destination: "https://api.openai.com/v1/responses",
               headers: {
                 "upstash-workflow-sdk-version": "1",
                 "content-type": "application/json",
                 "upstash-callback": WORKFLOW_ENDPOINT,
-                "upstash-callback-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+                "upstash-callback-feature-set":
+                  "LazyFetch,InitialBody,WF_DetectTrigger",
                 "upstash-callback-forward-upstash-workflow-callback": "true",
                 "upstash-callback-forward-upstash-workflow-concurrent": "1",
-                "upstash-callback-forward-upstash-workflow-contenttype": "application/json",
+                "upstash-callback-forward-upstash-workflow-contenttype":
+                  "application/json",
                 "upstash-callback-forward-upstash-workflow-stepid": "2",
-                "upstash-callback-forward-upstash-workflow-stepname": "Call Agent my agent",
+                "upstash-callback-forward-upstash-workflow-stepname":
+                  "Call Agent my agent",
                 "upstash-callback-forward-upstash-workflow-steptype": "Call",
                 "upstash-callback-retries": "5",
                 "upstash-callback-retry-delay": "1000",
@@ -194,7 +211,7 @@ describe("agents", () => {
                 "upstash-retries": "5",
                 "upstash-retry-delay": "1000",
                 "upstash-timeout": "10",
-              "upstash-forward-user-agent": expect.any(String),
+                "upstash-forward-user-agent": expect.any(String),
               },
             },
           ],
@@ -230,18 +247,21 @@ describe("agents", () => {
         token,
         body: [
           {
-     body: "{\"model\":\"gpt-4\",\"input\":[{\"role\":\"system\",\"content\":\"You are an agent orchestrating other AI Agents.\\n\\nThese other agents have tools available to them.\\n\\nGiven a prompt, utilize these agents to address requests.\\n\\nDon't always call all the agents provided to you at the same time. You can call one and use it's response to call another.\\n\\nAvoid calling the same agent twice in one turn. Instead, prefer to call it once but provide everything\\nyou need from that agent.\\n\"},{\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"my prompt\"}]}],\"temperature\":0.1,\"tools\":[{\"type\":\"function\",\"name\":\"my agent\",\"description\":\"An AI Agent with the following background: an agentHas access to the following tools: ai sdk tool\",\"parameters\":{\"type\":\"object\",\"properties\":{\"prompt\":{\"type\":\"string\"}},\"required\":[\"prompt\"],\"additionalProperties\":false,\"$schema\":\"http://json-schema.org/draft-07/schema#\"},\"strict\":false}],\"tool_choice\":\"auto\"}",
-     destination: "https://api.openai.com/v1/responses",
+            body: '{"model":"gpt-4","input":[{"role":"system","content":"You are an agent orchestrating other AI Agents.\\n\\nThese other agents have tools available to them.\\n\\nGiven a prompt, utilize these agents to address requests.\\n\\nDon\'t always call all the agents provided to you at the same time. You can call one and use it\'s response to call another.\\n\\nAvoid calling the same agent twice in one turn. Instead, prefer to call it once but provide everything\\nyou need from that agent.\\n"},{"role":"user","content":[{"type":"input_text","text":"my prompt"}]}],"temperature":0.1,"tools":[{"type":"function","name":"my agent","description":"An AI Agent with the following background: an agentHas access to the following tools: ai sdk tool","parameters":{"$schema":"http://json-schema.org/draft-07/schema#","type":"object","properties":{"prompt":{"type":"string"}},"required":["prompt"],"additionalProperties":false},"strict":false}],"tool_choice":"auto"}',
+            destination: "https://api.openai.com/v1/responses",
             headers: {
               "upstash-workflow-sdk-version": "1",
               "content-type": "application/json",
               "upstash-callback": WORKFLOW_ENDPOINT,
-              "upstash-callback-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+              "upstash-callback-feature-set":
+                "LazyFetch,InitialBody,WF_DetectTrigger",
               "upstash-callback-forward-upstash-workflow-callback": "true",
               "upstash-callback-forward-upstash-workflow-concurrent": "1",
-              "upstash-callback-forward-upstash-workflow-contenttype": "application/json",
+              "upstash-callback-forward-upstash-workflow-contenttype":
+                "application/json",
               "upstash-callback-forward-upstash-workflow-stepid": "3",
-              "upstash-callback-forward-upstash-workflow-stepname": "Call Agent manager llm",
+              "upstash-callback-forward-upstash-workflow-stepname":
+                "Call Agent manager llm",
               "upstash-callback-forward-upstash-workflow-steptype": "Call",
               "upstash-callback-retries": "5",
               "upstash-callback-retry-delay": "1000",
@@ -280,9 +300,7 @@ describe("agents", () => {
       await mockQStashServer({
         execute: async () => {
           const throws = () => agent.call({ prompt });
-          expect(throws).toThrow(
-            "Aborting workflow after executing step"
-          );
+          expect(throws).toThrow("Aborting workflow after executing step");
         },
         receivesRequest: false,
         responseFields: {
@@ -299,9 +317,7 @@ describe("agents", () => {
       await mockQStashServer({
         execute: async () => {
           const throws = () => agent.call({ prompt });
-          expect(throws).toThrow(
-            "Aborting workflow after executing step"
-          );
+          expect(throws).toThrow("Aborting workflow after executing step");
         },
         receivesRequest: false,
         responseFields: {
