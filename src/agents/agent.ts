@@ -3,7 +3,7 @@ import { z } from "zod";
 import { generateText, stepCountIs, StepResult, StopCondition, tool, ToolSet } from "ai";
 import { AgentParameters, AISDKTool, ManagerAgentParameters } from "./types";
 import { AGENT_NAME_HEADER, MANAGER_AGENT_PROMPT } from "./constants";
-import { WorkflowAbort, WorkflowContext } from "@upstash/workflow";
+import { WorkflowContext } from "@upstash/workflow";
 import { isDisabledWorkflowContext } from "../utils/error";
 
 const getWorkflowAbortInfo = (steps: StepResult<ToolSet>[]) => {
@@ -11,10 +11,9 @@ const getWorkflowAbortInfo = (steps: StepResult<ToolSet>[]) => {
     if (step.finishReason === "tool-calls") {
       for (const item of step.content) {
         if (
-          item.type === "tool-error" &&
-          (item.error as Error).name === "WorkflowAbort"
+          item.type === "tool-error"
         ) {
-          return item.error as WorkflowAbort;
+          return item.error
         }
       }
     }
@@ -22,7 +21,7 @@ const getWorkflowAbortInfo = (steps: StepResult<ToolSet>[]) => {
   return null;
 }
 
-const hasErrors: StopCondition<ToolSet> = ({ steps }) => {
+const hasErrors: StopCondition<ToolSet> = ({ steps }) => { 
   const result = getWorkflowAbortInfo(steps);
   return Boolean(result);
 };
@@ -96,9 +95,9 @@ export class Agent {
         temperature: this.temparature,
       });
 
-      const abortError = getWorkflowAbortInfo(result.steps);
-      if (abortError) {
-        throw new WorkflowAbort(abortError.message, abortError.stepInfo, abortError.cancelWorkflow);
+      const error = getWorkflowAbortInfo(result.steps);
+      if (error) {
+        throw error
       }
 
       return { text: result.text };
