@@ -21,12 +21,32 @@ export const fetchWithContextCall = async (
     // Prepare headers from init.headers
     const headers = init?.headers ? Object.fromEntries(new Headers(init.headers).entries()) : {};
 
-    // Prepare body from init.body
-    const body = init?.body ? JSON.parse(init.body as string) : undefined;
+    // Prepare body from init.body.
+    // context.call (Workflow v1+) sends this body to QStash as-is and requires
+    // it to be a string (the old auto-stringify / `stringifyBody` was removed).
+    // The AI SDK already provides a JSON string here, so forward it unchanged.
+    const body = (init?.body as string | undefined) ?? undefined;
 
-    // create step name
+    // Create a step name that is UNIQUE per LLM call within an agent run.
+    // The agent loop issues multiple model calls per run; if they all share the
+    // same step name, QStash (notably the local dev server) treats the repeated
+    // publishes as duplicates and drops them, stalling the agent after the first
+    // tool call. We derive a deterministic, replay-stable discriminator from the
+    // conversation length (which strictly grows with each call).
     const agentName = headers[AGENT_NAME_HEADER] as string | undefined;
-    const stepName = agentName ? `Call Agent ${agentName}` : "Call Agent";
+    let turn: number | undefined;
+    try {
+      const parsed = JSON.parse((init?.body as string) ?? "{}");
+      turn = Array.isArray(parsed?.input)
+        ? parsed.input.length
+        : Array.isArray(parsed?.messages)
+          ? parsed.messages.length
+          : undefined;
+    } catch {
+      // ignore – fall back to the base name without a discriminator
+    }
+    const baseStepName = agentName ? `Call Agent ${agentName}` : "Call Agent";
+    const stepName = turn === undefined ? baseStepName : `${baseStepName} (turn ${turn})`;
 
     // Make network call
     const responseInfo = await context.call(stepName, {
