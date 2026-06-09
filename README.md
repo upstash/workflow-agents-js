@@ -7,13 +7,7 @@ A powerful library for building AI agent workflows with Upstash Workflow. This p
 ## Installation
 
 ```bash
-npm install @upstash/workflow-agents
-```
-
-Currently, the package only supports a release candidate `@upstash/workflow` version, so make sure to install that version:
-
-```bash
-npm install @upstash/workflow@~0.3.0-rc
+npm install @upstash/workflow-agents @upstash/workflow
 ```
 
 For defining tools, you may also need:
