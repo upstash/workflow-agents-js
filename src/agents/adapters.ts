@@ -25,7 +25,15 @@ export const fetchWithContextCall = async (
     // context.call (Workflow v1+) sends this body to QStash as-is and requires
     // it to be a string (the old auto-stringify / `stringifyBody` was removed).
     // The AI SDK already provides a JSON string here, so forward it unchanged.
-    const body = (init?.body as string | undefined) ?? undefined;
+    // Guard against non-string bodies so we fail fast here with a clear message
+    // instead of letting a malformed body reach QStash at publish time.
+    if (init?.body !== undefined && typeof init.body !== "string") {
+      throw new TypeError(
+        `Expected request body to be a string, but received ${typeof init.body}. ` +
+          `context.call forwards the body to QStash verbatim and requires a string.`
+      );
+    }
+    const body = init?.body ?? undefined;
 
     // Create a step name that is UNIQUE per LLM call within an agent run.
     // The agent loop issues multiple model calls per run; if they all share the
@@ -36,7 +44,7 @@ export const fetchWithContextCall = async (
     const agentName = headers[AGENT_NAME_HEADER] as string | undefined;
     let turn: number | undefined;
     try {
-      const parsed = JSON.parse((init?.body as string) ?? "{}");
+      const parsed = JSON.parse(body ?? "{}");
       turn = Array.isArray(parsed?.input)
         ? parsed.input.length
         : Array.isArray(parsed?.messages)

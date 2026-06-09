@@ -142,7 +142,7 @@ describe("tasks", () => {
       execute: () => {
         const throws = () => task.run();
         expect(throws).toThrowError(
-          `Aborting workflow after executing step 'Call Agent my agent`
+          `Aborting workflow after executing step 'Call Agent my agent (turn 2)'`
         );
       },
       responseFields: {
@@ -306,7 +306,7 @@ describe("tasks", () => {
       execute: () => {
         const throws = () => task.run();
         expect(throws).toThrowError(
-          `Aborting workflow after executing step 'Call Agent my agent`
+          `Aborting workflow after executing step 'Call Agent my agent (turn 1)'`
         );
       },
       responseFields: {

@@ -21,6 +21,11 @@ import { tool } from "ai";
 import { z } from "zod";
 import { agentWorkflow } from "..";
 
+// These defaults are the well-known credentials printed by `@upstash/qstash-cli
+// dev` for its built-in local user. They are intended ONLY as a convenience for
+// running these integration tests against a local dev server; they are not real
+// secrets and must not be reused outside local development. Set QSTASH_URL /
+// QSTASH_TOKEN in the environment to point the tests at a different server.
 const QSTASH_URL = process.env.QSTASH_URL ?? "http://127.0.0.1:8080";
 const QSTASH_TOKEN =
   process.env.QSTASH_TOKEN ??
