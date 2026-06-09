@@ -2,6 +2,8 @@
 
 A powerful library for building AI agent workflows with Upstash Workflow. This package provides a flexible API for creating single and multi-agent systems that can collaborate to complete complex tasks.
 
+📚 Read the full documentation at [Upstash Workflow Agents](https://upstash.com/docs/workflow/agents/overview).
+
 ## Installation
 
 ```bash
@@ -28,18 +30,15 @@ Start with setting up your environment variables. If you are going to use OpenAI
 OPENAI_API_KEY="<OPENAI_API_KEY>"
 ```
 
-Next, set the QStash env variables. For local development, you can start the [QStash local development server](https://upstash.com/docs/workflow/howto/local-development/development-server):
-
-```bash
-npx @upstash/qstash-cli@latest dev
-```
-
-Then, set your environment variables:
+Next, set the QStash env variables. For local development, the easiest option is to let `@upstash/workflow` automatically download and connect to the [QStash local development server](https://upstash.com/docs/workflow/howto/local-development/development-server). Just set the following in your environment:
 
 ```ts
-QSTASH_TOKEN="eyJVc2VySUQiOiJkZWZhdWx0VXNlciIsIlBhc3N3b3JkIjoiZGVmYXVsdFBhc3N3b3JkIn0="
-QSTASH_URL="http://localhost:8080"
+QSTASH_DEV=true
 ```
+
+With `QSTASH_DEV=true`, the dev server is started for you and the required credentials are configured automatically — no manual setup needed.
+
+See the [development server docs](https://upstash.com/docs/workflow/howto/local-development/development-server) for more details.
 
 Next, define your agent workflow in a Next.js API route:
 

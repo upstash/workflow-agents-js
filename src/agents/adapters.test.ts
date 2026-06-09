@@ -1,7 +1,9 @@
 import { describe, test, expect } from "bun:test";
+import { serve } from "bun";
 import { Client } from "@upstash/qstash";
-import { MOCK_QSTASH_SERVER_URL, mockQStashServer, WORKFLOW_ENDPOINT, getWorkflowRunId, nanoid } from "../utils/test-utils";
-import { WorkflowTool, wrapTools } from "./adapters";
+import { MOCK_QSTASH_SERVER_PORT, MOCK_QSTASH_SERVER_URL, mockQStashServer, WORKFLOW_ENDPOINT, getWorkflowRunId, nanoid } from "../utils/test-utils";
+import { fetchWithContextCall, WorkflowTool, wrapTools } from "./adapters";
+import { AGENT_NAME_HEADER } from "./constants";
 import { tool } from "ai";
 import { z } from "zod";
 import { LangchainTool } from "./types";
@@ -18,6 +20,7 @@ describe("wrapTools", () => {
       steps: [],
       url: WORKFLOW_ENDPOINT,
       workflowRunId,
+      workflowRunCreatedAt: 1717000000000,
     });
 
   const aiSDKToolDescription = "ai sdk tool";
@@ -80,7 +83,7 @@ describe("wrapTools", () => {
             headers: {
               "upstash-workflow-sdk-version": "1",
               "content-type": "application/json",
-              "upstash-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+              "upstash-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger,WF_TriggerOnConfig",
               "upstash-forward-upstash-workflow-sdk-version": "1",
               "upstash-method": "POST",
               "upstash-workflow-init": "false",
@@ -128,7 +131,7 @@ describe("wrapTools", () => {
             headers: {
               "upstash-workflow-sdk-version": "1",
               "content-type": "application/json",
-              "upstash-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+              "upstash-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger,WF_TriggerOnConfig",
               "upstash-forward-upstash-workflow-sdk-version": "1",
               "upstash-method": "POST",
               "upstash-workflow-init": "false",
@@ -197,7 +200,7 @@ describe("wrapTools", () => {
             headers: {
               "content-type": "application/json",
               "upstash-delay": "1000s",
-              "upstash-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+              "upstash-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger,WF_TriggerOnConfig",
               "upstash-forward-upstash-workflow-sdk-version": "1",
               "upstash-method": "POST",
               "upstash-workflow-init": "false",
@@ -245,7 +248,7 @@ describe("wrapTools", () => {
             destination: WORKFLOW_ENDPOINT,
             headers: {
               "content-type": "application/json",
-              "upstash-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger",
+              "upstash-feature-set": "LazyFetch,InitialBody,WF_DetectTrigger,WF_TriggerOnConfig",
               "upstash-forward-upstash-workflow-sdk-version": "1",
               "upstash-method": "POST",
               "upstash-workflow-init": "false",
@@ -257,5 +260,98 @@ describe("wrapTools", () => {
         ],
       },
     });
+  });
+});
+
+describe("fetchWithContextCall", () => {
+  const token = getWorkflowRunId();
+  const workflowRunId = nanoid();
+  const agentName = "researcher";
+
+  const createContext = () =>
+    new WorkflowContext({
+      headers: new Headers({}) as Headers,
+      initialPayload: "mock",
+      qstashClient: new Client({
+        baseUrl: MOCK_QSTASH_SERVER_URL,
+        token,
+        enableTelemetry: false,
+      }),
+      steps: [],
+      url: WORKFLOW_ENDPOINT,
+      workflowRunId,
+      workflowRunCreatedAt: 1717000000000,
+    });
+
+  // An OpenAI-style request body whose `input` array has `turns` items.
+  const makeBody = (turns: number) =>
+    JSON.stringify({
+      model: "gpt-4o-mini",
+      input: Array.from({ length: turns }, (_, index) => ({
+        role: index === 0 ? "system" : "user",
+        content: "x",
+      })),
+    });
+
+  // Run fetchWithContextCall against a tiny mock QStash and capture the single
+  // batched message that the underlying context.call publishes.
+  const capturePublishedMessage = async (
+    body: string
+  ): Promise<{ body: string; stepName: string }> => {
+    let message: { body: string; headers: Record<string, string> } | undefined;
+    const server = serve({
+      port: MOCK_QSTASH_SERVER_PORT,
+      async fetch(request) {
+        const batch = (await request.json()) as {
+          body: string;
+          headers: Record<string, string>;
+        }[];
+        message = batch[0];
+        return new Response(JSON.stringify("msgId"), { status: 200 });
+      },
+    });
+
+    try {
+      await fetchWithContextCall(
+        createContext(),
+        undefined,
+        "https://api.openai.com/v1/responses",
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", [AGENT_NAME_HEADER]: agentName },
+          body,
+        }
+      );
+    } catch {
+      // context.call throws WorkflowAbort after publishing the step; expected.
+    } finally {
+      server.stop(true);
+    }
+
+    if (!message) throw new Error("no message was published to QStash");
+    return {
+      body: message.body,
+      stepName: message.headers["upstash-callback-forward-upstash-workflow-stepname"],
+    };
+  };
+
+  test("forwards the request body to context.call as an unmodified string", async () => {
+    const body = makeBody(2);
+    const published = await capturePublishedMessage(body);
+    // Regression guard: the body must be the exact string passed in, not an
+    // object or a double-encoded string (the QStash "cannot unmarshal object
+    // into ...body of type string" bug). It is published verbatim.
+    expect(published.body).toBe(body);
+  });
+
+  test("uses a unique, conversation-length-based step name per call", async () => {
+    const twoTurns = await capturePublishedMessage(makeBody(2));
+    const fourTurns = await capturePublishedMessage(makeBody(4));
+
+    expect(twoTurns.stepName).toBe(`Call Agent ${agentName} (turn 2)`);
+    expect(fourTurns.stepName).toBe(`Call Agent ${agentName} (turn 4)`);
+    // Repeated LLM calls in an agent loop must NOT share a step name, or QStash
+    // dedupes the publishes and the agent stalls after its first tool call.
+    expect(twoTurns.stepName).not.toBe(fourTurns.stepName);
   });
 });
