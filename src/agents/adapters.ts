@@ -85,12 +85,22 @@ export const fetchWithContextCall = async (
       headers: responseHeaders,
     });
   } catch (error) {
-    if (error instanceof Error && isInstanceOf(error, WorkflowAbort)) {
-      throw error;
-    } else {
-      console.error("Error in fetch implementation:", error);
-      throw error; // Rethrow error for further handling
+    // `isInstanceOf` compares constructor names, which a bundler rewrites — so a
+    // suspend from a minified build was falling through and being logged as an
+    // error. `name` is assigned a string literal, which survives minification.
+    const isAbort =
+      error instanceof Error &&
+      (error.name === "WorkflowAbort" || isInstanceOf(error, WorkflowAbort));
+
+    if (!isAbort) {
+      // The message only: the error carries `stepInfo`, which holds the
+      // provider `authorization` header and the whole conversation body.
+      console.error(
+        "Error in fetch implementation:",
+        error instanceof Error ? error.message : error
+      );
     }
+    throw error;
   }
 };
 
