@@ -8,8 +8,8 @@ import { tool } from "ai";
 import { AgentCallParams, AISDKTool, LangchainTool, ProviderFunction } from "./types";
 import { AGENT_NAME_HEADER } from "./constants";
 import { z, ZodType } from "zod";
-import { WorkflowAbort, WorkflowContext } from "@upstash/workflow";
-import { isInstanceOf } from "../utils/error";
+import { WorkflowContext } from "@upstash/workflow";
+import { isWorkflowAbort } from "../utils/error";
 
 export const fetchWithContextCall = async (
   context: WorkflowContext,
@@ -85,12 +85,15 @@ export const fetchWithContextCall = async (
       headers: responseHeaders,
     });
   } catch (error) {
-    if (error instanceof Error && isInstanceOf(error, WorkflowAbort)) {
-      throw error;
-    } else {
-      console.error("Error in fetch implementation:", error);
-      throw error; // Rethrow error for further handling
+    // An abort is an expected suspend, not a failure — never log it.
+    if (!isWorkflowAbort(error)) {
+      // `stack` rather than the error itself: a WorkflowAbort carries `stepInfo`,
+      // which holds the provider `authorization` header and the whole
+      // conversation body, and `console.error(error)` prints own properties.
+      // `stack` is name + message + frames only, so it cannot leak those.
+      console.error("Error in fetch implementation:", error instanceof Error ? error.stack : error);
     }
+    throw error;
   }
 };
 
