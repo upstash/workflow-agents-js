@@ -6,3 +6,4 @@ export const agentWorkflow = (context: WorkflowContext) => {
 }
 
 export { WorkflowTool } from "./agents/adapters";
+export type { PromptContent } from "./agents/types";
