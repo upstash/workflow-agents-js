@@ -63,7 +63,7 @@ describe("wrapTools", () => {
         if (!execute) {
           throw new Error("execute is missing.");
         } else {
-          const throws = () => execute({ expression: "hello" }, { messages: [], toolCallId: "id" });
+          const throws = () => execute({ expression: "hello" }, { messages: [], toolCallId: "id", context: undefined });
           expect(throws).toThrowError(
             `Aborting workflow after executing step 'Run tool aiSDKTool'`
           );
@@ -111,7 +111,7 @@ describe("wrapTools", () => {
         if (!execute) {
           throw new Error("execute is missing.");
         } else {
-          const throws = () => execute({ expression: "hello" }, { messages: [], toolCallId: "id" });
+          const throws = () => execute({ expression: "hello" }, { messages: [], toolCallId: "id", context: undefined });
           expect(throws).toThrowError(
             `Aborting workflow after executing step 'Run tool langChainTool'`
           );
@@ -182,7 +182,7 @@ describe("wrapTools", () => {
           throw new Error("execute is missing.");
         } else {
           const expression = "hello";
-          const throws = () => execute({ expression }, { messages: [], toolCallId: "id" });
+          const throws = () => execute({ expression }, { messages: [], toolCallId: "id", context: undefined });
           expect(throws).toThrow("Aborting workflow after executing step 'step hello'.");
         }
       },
@@ -229,7 +229,7 @@ describe("wrapTools", () => {
         if (!execute) {
           throw new Error("execute is missing.");
         } else {
-          const throws = () => execute({ expression: "hello" }, { messages: [], toolCallId: "id" });
+          const throws = () => execute({ expression: "hello" }, { messages: [], toolCallId: "id", context: undefined });
           expect(throws).toThrowError(
             `Aborting workflow after executing step 'Run tool wrappedWorkflowTool'`
           );

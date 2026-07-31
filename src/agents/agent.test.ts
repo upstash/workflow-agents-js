@@ -157,7 +157,7 @@ describe("agents", () => {
             throw new Error("execute is missing.");
           } else {
             const throws = () =>
-              execute({ prompt: "hello" }, { messages: [], toolCallId: "id" });
+              execute({ prompt: "hello" }, { messages: [], toolCallId: "id", context: undefined });
             expect(throws).toThrowError(
               `Aborting workflow after executing step 'Call Agent my agent (turn 2)'`
             );
