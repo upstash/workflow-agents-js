@@ -157,7 +157,7 @@ describe("agents", () => {
             throw new Error("execute is missing.");
           } else {
             const throws = () =>
-              execute({ prompt: "hello" }, { messages: [], toolCallId: "id" });
+              execute({ prompt: "hello" }, { messages: [], toolCallId: "id", context: undefined });
             expect(throws).toThrowError(
               `Aborting workflow after executing step 'Call Agent my agent (turn 2)'`
             );
@@ -298,6 +298,38 @@ describe("agents", () => {
       // Without stopWhen the AI SDK runs a single step, so the agent would call
       // one tool and then stop. This guards against that regression.
       expect(args.stopWhen).toBeDefined();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  test("call threads history into messages and returns the updated conversation", async () => {
+    const generated: ai.ModelMessage[] = [{ role: "assistant", content: "done" }];
+    const spy = spyOn(ai, "generateText").mockResolvedValue({
+      text: "done",
+      steps: [],
+      response: { messages: generated },
+    } as unknown as Awaited<ReturnType<typeof ai.generateText>>);
+    try {
+      const history: ai.ModelMessage[] = [
+        { role: "user", content: "earlier prompt" },
+        { role: "assistant", content: "earlier answer" },
+      ];
+      const result = await agent.call({ prompt: "follow-up", history });
+
+      const args = spy.mock.calls[0][0] as {
+        prompt?: string;
+        messages?: ai.ModelMessage[];
+      };
+      // The prompt travels as the last user message of the conversation.
+      expect(args.prompt).toBeUndefined();
+      expect(args.messages).toEqual([...history, { role: "user", content: "follow-up" }]);
+      // What the caller persists to continue the conversation later.
+      expect(result.messages).toEqual([
+        ...history,
+        { role: "user", content: "follow-up" },
+        ...generated,
+      ]);
     } finally {
       spy.mockRestore();
     }
