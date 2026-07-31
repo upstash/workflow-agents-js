@@ -1,6 +1,14 @@
 import { z } from "zod";
 
-import { generateText, stepCountIs, StepResult, StopCondition, tool, ToolSet } from "ai";
+import {
+  generateText,
+  stepCountIs,
+  ModelMessage,
+  StepResult,
+  StopCondition,
+  tool,
+  ToolSet,
+} from "ai";
 import { AgentParameters, AISDKTool, ManagerAgentParameters } from "./types";
 import { AGENT_NAME_HEADER, MANAGER_AGENT_PROMPT } from "./constants";
 import { WorkflowContext } from "@upstash/workflow";
@@ -72,9 +80,14 @@ export class Agent {
    * Trigger the agent by passing a prompt
    *
    * @param prompt task to assign to the agent
-   * @returns Response as `{ text: string }`
+   * @param history prior conversation to continue from; the prompt is appended
+   *   to it as a new user message
+   * @returns Response as `{ text: string, messages: ModelMessage[] }` where
+   *   `messages` is the full updated conversation (history + prompt + every
+   *   message generated during the call) — persist it to continue the
+   *   conversation in a later call
    */
-  public async call({ prompt }: { prompt: string }) {
+  public async call({ prompt, history }: { prompt: string; history?: ModelMessage[] }) {
     // eslint-disable-next-line no-useless-catch
     try {
       if (isDisabledWorkflowContext(this.context)) {
@@ -83,12 +96,14 @@ export class Agent {
         await this.context.sleep("abort", 0);
       }
 
+      const messages: ModelMessage[] = [...(history ?? []), { role: "user", content: prompt }];
+
       const result = await generateText({
         model: this.model,
         tools: this.tools,
         stopWhen: [stepCountIs(this.maxSteps), hasErrors],
         system: this.background,
-        prompt: prompt,
+        messages,
         headers: {
           [AGENT_NAME_HEADER]: this.name,
         },
@@ -100,7 +115,7 @@ export class Agent {
         throw error
       }
 
-      return { text: result.text };
+      return { text: result.text, messages: [...messages, ...(result.response?.messages ?? [])] };
     } catch (error) {
       throw error;
     }
@@ -118,7 +133,10 @@ export class Agent {
     return tool({
       inputSchema: z.object({ prompt: z.string() }),
       execute: async ({ prompt }) => {
-        return await this.call({ prompt });
+        // Only the text: returning the full message list would inline the
+        // sub-agent's whole conversation into the calling agent's context.
+        const { text } = await this.call({ prompt });
+        return { text };
       },
       description:
         `An AI Agent with the following background: ${this.background}` +

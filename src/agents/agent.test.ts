@@ -303,6 +303,38 @@ describe("agents", () => {
     }
   });
 
+  test("call threads history into messages and returns the updated conversation", async () => {
+    const generated: ai.ModelMessage[] = [{ role: "assistant", content: "done" }];
+    const spy = spyOn(ai, "generateText").mockResolvedValue({
+      text: "done",
+      steps: [],
+      response: { messages: generated },
+    } as unknown as Awaited<ReturnType<typeof ai.generateText>>);
+    try {
+      const history: ai.ModelMessage[] = [
+        { role: "user", content: "earlier prompt" },
+        { role: "assistant", content: "earlier answer" },
+      ];
+      const result = await agent.call({ prompt: "follow-up", history });
+
+      const args = spy.mock.calls[0][0] as {
+        prompt?: string;
+        messages?: ai.ModelMessage[];
+      };
+      // The prompt travels as the last user message of the conversation.
+      expect(args.prompt).toBeUndefined();
+      expect(args.messages).toEqual([...history, { role: "user", content: "follow-up" }]);
+      // What the caller persists to continue the conversation later.
+      expect(result.messages).toEqual([
+        ...history,
+        { role: "user", content: "follow-up" },
+        ...generated,
+      ]);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   describe("disabled context", () => {
     const { agent } = getAgentsApi({ disabledContext: true });
     test("should throw abort when empty prompt", async () => {

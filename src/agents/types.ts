@@ -1,4 +1,4 @@
-import type { Tool, generateText } from "ai";
+import type { ModelMessage, Tool, generateText } from "ai";
 import { Agent } from "./agent";
 import { WorkflowTool } from "./adapters";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -54,6 +54,13 @@ type TaskParams = {
    * task assigned to the agent
    */
   prompt: string;
+  /**
+   * Prior conversation to continue from. When passed, the prompt is appended
+   * to it as a new user message and the model sees the full history — useful
+   * for follow-up runs that must remember earlier turns (including tool
+   * results such as screenshots).
+   */
+  history?: ModelMessage[];
 };
 export type SingleAgentTaskParams = TaskParams & {
   /**

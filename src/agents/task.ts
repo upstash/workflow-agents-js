@@ -1,3 +1,4 @@
+import type { ModelMessage } from "ai";
 import { WorkflowContext } from "@upstash/workflow";
 import { ManagerAgent } from "./agent";
 import { MultiAgentTaskParams, SingleAgentTaskParams } from "./types";
@@ -49,17 +50,21 @@ export class Task {
   /**
    * Run the agents to complete the task
    *
-   * @returns Result of the task as { text: string }
+   * @returns Result of the task as { text: string, messages: ModelMessage[] }.
+   *   `messages` is the full updated conversation (the task's `history`, the
+   *   prompt, and everything generated during the run) — persist it and pass
+   *   it back as `history` to continue the conversation in a later task.
    */
-  public async run(): Promise<{ text: string }> {
-    const { prompt, ...otherParams } = this.taskParameters;
+  public async run(): Promise<{ text: string; messages: ModelMessage[] }> {
+    const { prompt, history, ...otherParams } = this.taskParameters;
 
     if ("agent" in otherParams) {
       const agent = otherParams.agent;
       const result = await agent.call({
         prompt,
+        history,
       });
-      return { text: result.text };
+      return { text: result.text, messages: result.messages };
     } else {
       const { agents, maxSteps, model, background } = otherParams;
       const managerAgent = new ManagerAgent(
@@ -73,8 +78,8 @@ export class Task {
         this.context
       );
 
-      const result = await managerAgent.call({ prompt });
-      return { text: result.text };
+      const result = await managerAgent.call({ prompt, history });
+      return { text: result.text, messages: result.messages };
     }
   }
 }
