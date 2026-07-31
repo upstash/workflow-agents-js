@@ -1,4 +1,11 @@
-import type { ModelMessage, Tool, generateText } from "ai";
+import type { ModelMessage, Tool, UserModelMessage, generateText } from "ai";
+
+/**
+ * What a task/agent accepts as its prompt: a plain string, or the full user
+ * message content (text parts plus image/file parts — e.g. an image URL the
+ * user attached). Either way it becomes the conversation's next user message.
+ */
+export type PromptContent = UserModelMessage["content"];
 import { Agent } from "./agent";
 import { WorkflowTool } from "./adapters";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -51,9 +58,10 @@ export type AgentParameters<TTool extends AISDKTool | LangchainTool | WorkflowTo
 
 type TaskParams = {
   /**
-   * task assigned to the agent
+   * task assigned to the agent — a string, or user message content parts
+   * (text + images/files)
    */
-  prompt: string;
+  prompt: PromptContent;
   /**
    * Prior conversation to continue from. When passed, the prompt is appended
    * to it as a new user message and the model sees the full history — useful

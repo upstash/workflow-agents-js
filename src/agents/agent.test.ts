@@ -303,6 +303,30 @@ describe("agents", () => {
     }
   });
 
+  test("call accepts user content parts as the prompt", async () => {
+    const spy = spyOn(ai, "generateText").mockResolvedValue({
+      text: "done",
+      steps: [],
+      response: { messages: [] },
+    } as unknown as Awaited<ReturnType<typeof ai.generateText>>);
+    try {
+      const prompt: ai.UserModelMessage["content"] = [
+        { type: "text", text: "what is in this image?" },
+        {
+          type: "file",
+          mediaType: "image/png",
+          data: { type: "url", url: new URL("https://example.com/shot.png") },
+        },
+      ];
+      await agent.call({ prompt });
+
+      const args = spy.mock.calls[0][0] as { messages?: ai.ModelMessage[] };
+      expect(args.messages).toEqual([{ role: "user", content: prompt }]);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
   test("call threads history into messages and returns the updated conversation", async () => {
     const generated: ai.ModelMessage[] = [{ role: "assistant", content: "done" }];
     const spy = spyOn(ai, "generateText").mockResolvedValue({

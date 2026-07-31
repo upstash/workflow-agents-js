@@ -9,7 +9,7 @@ import {
   tool,
   ToolSet,
 } from "ai";
-import { AgentParameters, AISDKTool, ManagerAgentParameters } from "./types";
+import { AgentParameters, AISDKTool, ManagerAgentParameters, PromptContent } from "./types";
 import { AGENT_NAME_HEADER, MANAGER_AGENT_PROMPT } from "./constants";
 import { WorkflowContext } from "@upstash/workflow";
 import { isDisabledWorkflowContext } from "../utils/error";
@@ -79,7 +79,8 @@ export class Agent {
   /**
    * Trigger the agent by passing a prompt
    *
-   * @param prompt task to assign to the agent
+   * @param prompt task to assign to the agent — a string, or user message
+   *   content parts (text + images/files)
    * @param history prior conversation to continue from; the prompt is appended
    *   to it as a new user message
    * @returns Response as `{ text: string, messages: ModelMessage[] }` where
@@ -87,7 +88,7 @@ export class Agent {
    *   message generated during the call) — persist it to continue the
    *   conversation in a later call
    */
-  public async call({ prompt, history }: { prompt: string; history?: ModelMessage[] }) {
+  public async call({ prompt, history }: { prompt: PromptContent; history?: ModelMessage[] }) {
     // eslint-disable-next-line no-useless-catch
     try {
       if (isDisabledWorkflowContext(this.context)) {
