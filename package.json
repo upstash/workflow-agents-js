@@ -5,7 +5,7 @@
   "scripts": {
     "lint": "tsc && eslint \"{src,platforms}/**/*.{js,ts,tsx}\"  --quiet --fix",
     "build": "tsup && cp README.md ./dist/ && cp package.json ./dist/ && cp LICENSE ./dist/",
-    "test": "bun test src/utils/utils.test.ts src/agents/adapters.test.ts src/agents/agent.test.ts src/agents/task.test.ts",
+    "test": "bun test src/utils/utils.test.ts src/agents/adapters.test.ts src/agents/agent.test.ts src/agents/task.test.ts src/agents/telemetry.test.ts",
     "test:integration": "bun test src/agents/integration.test.ts"
   },
   "author": "Cahid Arda Oz",

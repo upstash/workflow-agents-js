@@ -13,6 +13,7 @@ import { z } from "zod";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { WorkflowAbort, WorkflowContext } from "@upstash/workflow";
+import { SDK_TELEMETRY } from "./telemetry";
 
 class MockDisabledWorkflowContext extends WorkflowContext {
   disabled = true as const;
@@ -188,7 +189,7 @@ describe("tasks", () => {
 
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
-              "upstash-telemetry-sdk": "workflow",
+              "upstash-telemetry-sdk": `workflow, ${SDK_TELEMETRY}`,
               "upstash-forward-user-agent": expect.any(String),
             },
           },
@@ -272,7 +273,7 @@ describe("tasks", () => {
 
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
-              "upstash-telemetry-sdk": "workflow",
+              "upstash-telemetry-sdk": `workflow, ${SDK_TELEMETRY}`,
               "upstash-forward-user-agent": expect.any(String),
             },
           },
@@ -355,7 +356,7 @@ describe("tasks", () => {
               "upstash-forward-anthropic-version": "2023-06-01",
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
-              "upstash-telemetry-sdk": "workflow",
+              "upstash-telemetry-sdk": `workflow, ${SDK_TELEMETRY}`,
             },
           },
         ],

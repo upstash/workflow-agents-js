@@ -2,6 +2,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createWorkflowModel, wrapTools } from "./adapters";
 import { Agent } from "./agent";
 import { Task } from "./task";
+import { addTelemetry } from "./telemetry";
 import {
   AgentParameters,
   AISDKTool,
@@ -24,6 +25,7 @@ export class WorkflowAgents {
   private context: WorkflowContext;
   constructor({ context }: { context: WorkflowContext }) {
     this.context = context;
+    addTelemetry(context);
   }
 
   /**
