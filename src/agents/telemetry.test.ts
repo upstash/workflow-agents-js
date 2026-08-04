@@ -16,7 +16,7 @@ describe("telemetry", () => {
 
     // @ts-expect-error accessing hidden fields
     expect(context.executor.telemetry.sdk).toBe(
-      `@upstash/workflow@v1.3.3, ${SDK_TELEMETRY}`
+      `@upstash/workflow@v1.3.3,${SDK_TELEMETRY}`
     );
   });
 
@@ -29,7 +29,7 @@ describe("telemetry", () => {
 
     // @ts-expect-error accessing hidden fields
     expect(context.executor.telemetry.sdk).toBe(
-      `@upstash/workflow@v1.3.3, ${SDK_TELEMETRY}`
+      `@upstash/workflow@v1.3.3,${SDK_TELEMETRY}`
     );
   });
 

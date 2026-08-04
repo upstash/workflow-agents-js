@@ -189,7 +189,7 @@ describe("tasks", () => {
 
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
-              "upstash-telemetry-sdk": `workflow, ${SDK_TELEMETRY}`,
+              "upstash-telemetry-sdk": `workflow,${SDK_TELEMETRY}`,
               "upstash-forward-user-agent": expect.any(String),
             },
           },
@@ -273,7 +273,7 @@ describe("tasks", () => {
 
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
-              "upstash-telemetry-sdk": `workflow, ${SDK_TELEMETRY}`,
+              "upstash-telemetry-sdk": `workflow,${SDK_TELEMETRY}`,
               "upstash-forward-user-agent": expect.any(String),
             },
           },
@@ -356,7 +356,7 @@ describe("tasks", () => {
               "upstash-forward-anthropic-version": "2023-06-01",
               "upstash-telemetry-framework": "bun",
               "upstash-telemetry-runtime": "unknown",
-              "upstash-telemetry-sdk": `workflow, ${SDK_TELEMETRY}`,
+              "upstash-telemetry-sdk": `workflow,${SDK_TELEMETRY}`,
             },
           },
         ],

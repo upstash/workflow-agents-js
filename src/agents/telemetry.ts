@@ -7,7 +7,7 @@ export const SDK_TELEMETRY = `@upstash/workflow-agents@v${version}`;
  * Appends the workflow-agents sdk to the telemetry of the workflow context,
  * comma separated:
  *
- * `Upstash-Telemetry-Sdk: @upstash/workflow@v1.3.3, @upstash/workflow-agents@v0.3.1`
+ * `Upstash-Telemetry-Sdk: @upstash/workflow@v1.3.3,@upstash/workflow-agents@v0.3.1`
  *
  * Respects the telemetry opt-out (`disableTelemetry` in serve): a context
  * without telemetry is left untouched.
@@ -22,7 +22,7 @@ export function addTelemetry(context: WorkflowContext) {
     if (!telemetry?.sdk || telemetry.sdk.includes("@upstash/workflow-agents")) {
       return;
     }
-    telemetry.sdk = `${telemetry.sdk}, ${SDK_TELEMETRY}`;
+    telemetry.sdk = [telemetry.sdk, SDK_TELEMETRY].join(",");
   } catch {
     // telemetry must never break the sdk
   }
